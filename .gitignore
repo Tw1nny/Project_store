@@ -8,3 +8,6 @@ env/
 staticfiles/
 media/
 *.log
+
+# Переменные окружения (реальные секреты) — коммитится только .env.example
+.env

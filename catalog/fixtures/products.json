@@ -1,0 +1,80 @@
+[
+  {
+    "model": "catalog.product",
+    "pk": 1,
+    "fields": {
+      "name": "Смартфон Galaxy A55",
+      "description": "6.6-дюймовый экран, 128 ГБ памяти.",
+      "image": "",
+      "category": 1,
+      "price": "29990.00",
+      "created_at": "2026-09-01T10:00:00Z",
+      "updated_at": "2026-09-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 2,
+    "fields": {
+      "name": "Ноутбук Aero 15",
+      "description": "15-дюймовый ноутбук для работы и учёбы.",
+      "image": "",
+      "category": 1,
+      "price": "64990.00",
+      "created_at": "2026-09-02T10:00:00Z",
+      "updated_at": "2026-09-02T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 3,
+    "fields": {
+      "name": "Худи унисекс",
+      "description": "Тёплое худи из хлопка, несколько цветов.",
+      "image": "",
+      "category": 2,
+      "price": "2490.00",
+      "created_at": "2026-09-03T10:00:00Z",
+      "updated_at": "2026-09-03T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 4,
+    "fields": {
+      "name": "Кроссовки беговые",
+      "description": "Лёгкие кроссовки для бега и повседневной носки.",
+      "image": "",
+      "category": 2,
+      "price": "5990.00",
+      "created_at": "2026-09-04T10:00:00Z",
+      "updated_at": "2026-09-04T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 5,
+    "fields": {
+      "name": "Django для начинающих",
+      "description": "Практическое руководство по веб-разработке на Django.",
+      "image": "",
+      "category": 3,
+      "price": "1290.00",
+      "created_at": "2026-09-05T10:00:00Z",
+      "updated_at": "2026-09-05T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 6,
+    "fields": {
+      "name": "Чистый код",
+      "description": "Классика литературы о качестве программного кода.",
+      "image": "",
+      "category": 3,
+      "price": "1590.00",
+      "created_at": "2026-09-06T10:00:00Z",
+      "updated_at": "2026-09-06T10:00:00Z"
+    }
+  }
+]
