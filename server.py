@@ -22,7 +22,7 @@ PORT = 8000
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
-CONTACTS_PAGE = os.path.join(TEMPLATES_DIR, "templates/contacts.html")
+CONTACTS_PAGE = os.path.join(TEMPLATES_DIR, "contacts.html")
 
 
 def read_template(filename: str) -> str:
@@ -69,7 +69,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         try:
-            html = read_template("templates/contacts.html")
+            html = read_template("contacts.html")
             self._send_html(200, html)
         except FileNotFoundError as error:
             self._send_500(error)
