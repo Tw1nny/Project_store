@@ -7,9 +7,12 @@
    фреймворков (урок 1).
 2. **`config/` + `catalog/`** — Django-проект с приложением `catalog`
    (урок 2): страницы «Главная» и «Контакты», рендер через `render()`.
-3. **PostgreSQL, модели, админка, фикстуры** (урок 3, текущий) —
-   подключена БД PostgreSQL, созданы модели `Category`/`Product`,
-   настроена админка, добавлены фикстуры и кастомная management-команда.
+3. **PostgreSQL, модели, админка, фикстуры** (урок 3) — подключена
+   БД PostgreSQL, созданы модели `Category`/`Product`, настроена
+   админка, добавлены фикстуры и кастомная management-команда.
+4. **Динамика и шаблоны** (урок 4, текущий) — детальная страница
+   товара, общий базовый шаблон с подшаблоном меню, форма добавления
+   товара, постраничный вывод списка товаров.
 
 Все слои оставлены в репозитории для истории выполнения домашних
 заданий; актуальная функциональность — Django-часть с подключённой БД.
@@ -45,7 +48,8 @@
 ├── catalog/                     # приложение каталога товаров
 │   ├── models.py                  # Category, Product, ContactInfo
 │   ├── admin.py                   # регистрация моделей в админке
-│   ├── views.py                   # home(), contacts()
+│   ├── forms.py                   # ProductForm — форма добавления товара
+│   ├── views.py                   # home(), product_detail(), product_create(), contacts()
 │   ├── urls.py
 │   ├── migrations/
 │   │   └── 0001_initial.py        # миграция моделей
@@ -55,8 +59,12 @@
 │   ├── management/commands/
 │   │   └── fill_catalog.py        # очищает БД и грузит фикстуры
 │   └── templates/catalog/
-│       ├── base.html
-│       ├── home.html
+│       ├── base.html              # общий шаблон: сайдбар + футер + стили
+│       ├── includes/
+│       │   └── menu.html          # подшаблон главного меню (include в base.html)
+│       ├── home.html              # список товаров + пагинация
+│       ├── product_detail.html    # подробная страница товара
+│       ├── product_form.html      # форма добавления товара
 │       └── contacts.html          # выводит ContactInfo из БД
 │
 ├── server.py                    # задание урока 1 (http.server)
@@ -114,8 +122,10 @@
    python manage.py runserver
    ```
 
-   - `http://127.0.0.1:8000/` — главная страница (в консоли увидите
-     список последних 5 продуктов);
+   - `http://127.0.0.1:8000/` — главная страница: постраничный список
+     товаров (в консоли увидите список последних 5 продуктов);
+   - `http://127.0.0.1:8000/products/<id>/` — подробная страница товара;
+   - `http://127.0.0.1:8000/products/add/` — форма добавления товара;
    - `http://127.0.0.1:8000/contacts/` — контакты (данные из
      `ContactInfo`, заполняются через админку) + форма обратной связи;
    - `http://127.0.0.1:8000/admin/` — админка Django.
@@ -170,3 +180,18 @@ GitFlow: `main` — стабильный релиз, `develop` — интегр�
 | Кастомная команда, удаляет данные перед загрузкой, использует фикстуры | `catalog/management/commands/fill_catalog.py` |
 | Доп. задание: 5 последних продуктов в консоль | `catalog/views.py` → `home()` |
 | Доп. задание: модель контактов на странице | `catalog/models.py` → `ContactInfo`, `catalog/views.py`/`contacts.html` |
+
+## Соответствие критериям урока 4 (динамика и шаблоны)
+
+| Критерий | Где реализовано |
+|---|---|
+| Контроллер получает `pk`, извлекает объект через ORM, передаёт в шаблон | `catalog/views.py` → `product_detail()` |
+| Название, описание, цена, изображение отображаются | `catalog/templates/catalog/product_detail.html` |
+| URL `/products/<int:pk>/`, нейминг `product_detail` | `catalog/urls.py` |
+| Лаконичный запрос `Product.objects.all()` для списка | `catalog/views.py` → `home()` |
+| Цикл, изображение, название, описание (обрезано до 100 символов) | `catalog/templates/catalog/home.html` (`{% for %}`, `truncatechars:100`) |
+| Переходы с главной на товар и обратно | ссылка «Подробнее» в `home.html`, «Назад к списку» в `product_detail.html` |
+| Общий базовый шаблон, все шаблоны его наследуют | `catalog/templates/catalog/base.html`, `{% extends %}` во всех страницах |
+| Подшаблон меню подключён во все шаблоны | `catalog/templates/catalog/includes/menu.html`, `{% include %}` в `base.html` |
+| Доп.: форма добавления товара, валидация, сохранение в БД | `catalog/forms.py` (`ProductForm`), `catalog/views.py` → `product_create()`, `product_form.html` |
+| Доп.: постраничный вывод товаров | `catalog/views.py` → `home()` (`Paginator`), блок пагинации в `home.html` |
