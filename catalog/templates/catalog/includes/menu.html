@@ -1,0 +1,57 @@
+{% comment %}
+Подшаблон главного меню (боковой сайдбар). Подключается во все страницы
+через тег include в base.html, чтобы не дублировать разметку меню
+в каждом шаблоне.
+{% endcomment %}
+<nav class="sidebar d-flex flex-column flex-shrink-0 p-3" style="width: 260px;">
+  <a href="{% url 'catalog:home' %}" class="brand d-flex align-items-center mb-3 text-white text-decoration-none">
+    <span class="badge bg-white text-dark me-2">B</span>
+    Меню
+  </a>
+  <hr class="text-secondary">
+  <ul class="nav nav-pills flex-column mb-auto">
+    <li class="nav-item">
+      <a href="{% url 'catalog:home' %}"
+         class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        🏠 Главная
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{% url 'catalog:product_create' %}"
+         class="nav-link {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}">
+        ➕ Добавить товар
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{% url 'catalog:contacts' %}"
+         class="nav-link {% if request.resolver_match.url_name == 'contacts' %}active{% endif %}">
+        👤 Контакты
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{% url 'blog:blogpost_list' %}"
+         class="nav-link {% if request.resolver_match.app_name == 'blog' and request.resolver_match.url_name != 'blogpost_create' %}active{% endif %}">
+        📝 Блог
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{% url 'blog:blogpost_create' %}"
+         class="nav-link {% if request.resolver_match.url_name == 'blogpost_create' %}active{% endif %}">
+        ✏️ Новая статья
+      </a>
+    </li>
+  </ul>
+  <hr class="text-secondary">
+  <div class="dropdown">
+    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+       data-bs-toggle="dropdown">
+      <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f464.svg"
+           width="28" height="28" class="rounded-circle me-2 bg-white p-1" alt="user">
+      Пользователь
+    </a>
+    <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+      <li><a class="dropdown-item" href="#">Профиль</a></li>
+      <li><a class="dropdown-item" href="#">Выход</a></li>
+    </ul>
+  </div>
+</nav>

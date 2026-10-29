@@ -34,15 +34,23 @@
     </div>
 
     <div class="col-md-7">
-      <h2 class="h4">Наши контакты</h2>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-        mollit anim id est laborum.</p>
-      <p>While these feedback styles cannot be styled with CSS, you can still customize the
-        feedback text through JavaScript.</p>
+      {% if contact_info %}
+        <h2 class="h4">{{ contact_info.title }}</h2>
+        {% if contact_info.description %}
+          <p>{{ contact_info.description|linebreaksbr }}</p>
+        {% endif %}
+        <ul class="list-unstyled">
+          {% if contact_info.address %}<li><strong>Адрес:</strong> {{ contact_info.address }}</li>{% endif %}
+          {% if contact_info.phone %}<li><strong>Телефон:</strong> {{ contact_info.phone }}</li>{% endif %}
+          {% if contact_info.email %}<li><strong>Email:</strong> {{ contact_info.email }}</li>{% endif %}
+        </ul>
+      {% else %}
+        <h2 class="h4">Наши контакты</h2>
+        <p class="text-muted">
+          Контактные данные ещё не заполнены в админке
+          (модель <code>ContactInfo</code>, раздел «Контактная информация»).
+        </p>
+      {% endif %}
     </div>
   </div>
 {% endblock %}

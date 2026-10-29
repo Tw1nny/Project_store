@@ -2,16 +2,22 @@
 Django settings for the online-store learning project.
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ВАЖНО: для учебного проекта секретный ключ хранится прямо тут.
-# В реальном проекте его нужно выносить в переменные окружения / .env
-# и не коммитить в репозиторий.
-SECRET_KEY = "django-insecure-change-me-in-production-vn3k$q9z8r2w"
+# Подгружаем переменные окружения из .env (если файла нет — переменные
+# просто не найдутся и os.getenv() вернёт значения по умолчанию).
+load_dotenv(BASE_DIR / ".env")
 
-DEBUG = True
+# Секретный ключ и режим отладки тоже вынесены в .env, со значениями
+# по умолчанию на случай локального запуска без .env файла.
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-me-in-production-vn3k$q9z8r2w")
+
+DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
@@ -23,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "catalog.apps.CatalogConfig",
+    "blog.apps.BlogConfig",
 ]
 
 MIDDLEWARE = [
@@ -59,8 +66,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
+        "NAME": os.getenv("DB_NAME", "store_db"),
+        "USER": os.getenv("DB_USER", "store_user"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 
@@ -82,4 +93,24 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "catalog" / "static"]
 
+# Медиаданные (изображения продуктов, загружаемые через админку)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --- Почта (доп. задание урока 5: письмо при 100 просмотрах статьи) ---
+# По умолчанию письма печатаются в консоль runserver. Чтобы отправлять
+# настоящие письма, задайте в .env EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+# и параметры SMTP-сервера.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.yandex.ru")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "465"))
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "True") == "True"
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False") == "True"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "webmaster@localhost")
+
+# Куда слать поздравление о 100 просмотрах (себе).
+BLOG_NOTIFY_EMAIL = os.getenv("BLOG_NOTIFY_EMAIL", EMAIL_HOST_USER)
