@@ -1,0 +1,44 @@
+{% extends "catalog/base.html" %}
+
+{% block content %}
+  {% if object %}
+    <a href="{% url 'blog:blogpost_detail' pk=object.pk %}" class="btn btn-link ps-0 mb-3">&laquo; Назад к статье</a>
+  {% else %}
+    <a href="{% url 'blog:blogpost_list' %}" class="btn btn-link ps-0 mb-3">&laquo; Назад к списку статей</a>
+  {% endif %}
+
+  <h1 class="mb-4">{{ title }}</h1>
+
+  <div class="row">
+    <div class="col-md-8">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+          {% if field.name == "is_published" %}
+            <div class="form-check mb-3">
+              {{ field }}
+              <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+            </div>
+          {% else %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">
+                {{ field.label }}{% if field.field.required %} *{% endif %}
+              </label>
+              {{ field }}
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}
