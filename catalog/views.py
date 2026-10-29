@@ -1,18 +1,20 @@
 """
-Контроллеры приложения catalog.
+Контроллеры приложения catalog (CBV, урок 5).
 
-- home: главная страница — постранично выводит список товаров
-  (Product.objects.all(), пагинация через Paginator), а также печатает
-  в консоль 5 последних добавленных продуктов (доп. задание прошлого
-  урока).
-- product_detail: страница с подробной информацией о товаре по pk.
-- product_create: форма добавления нового товара (доп. задание).
-- contacts: страница контактов с данными из модели ContactInfo и
-  обработкой формы обратной связи.
+- HomeView: главная страница — список товаров (ListView), с пагинацией
+  и печатью в консоль 5 последних добавленных продуктов (доп. задание
+  прошлого урока, сохранено через переопределение get_queryset).
+- ProductDetailView: страница с подробной информацией о товаре по pk
+  (DetailView, с select_related через get_queryset).
+- ProductCreateView: форма добавления нового товара (CreateView).
+- ContactsView: страница контактов с данными из модели ContactInfo и
+  обработкой формы обратной связи (View — отдельные get()/post()).
 """
 
-from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import render
+from django.urls import reverse
+from django.views import View
+from django.views.generic import CreateView, DetailView, ListView
 
 from catalog.forms import ProductForm
 from catalog.models import ContactInfo, Product
@@ -20,65 +22,75 @@ from catalog.models import ContactInfo, Product
 PRODUCTS_PER_PAGE = 6
 
 
-def home(request):
+class HomeView(ListView):
     """Главная страница — список товаров с пагинацией."""
-    latest_products = Product.objects.select_related("category").order_by("-created_at")[:5]
 
-    print("Последние 5 добавленных продуктов:")
-    for product in latest_products:
-        print(f"  [{product.id}] {product.name} — {product.price} ({product.category.name})")
+    model = Product
+    template_name = "catalog/home.html"
+    context_object_name = "products"
+    paginate_by = PRODUCTS_PER_PAGE
 
-    products_qs = Product.objects.all()
-    paginator = Paginator(products_qs, PRODUCTS_PER_PAGE)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    def get_queryset(self):
+        latest_products = Product.objects.select_related("category").order_by("-created_at")[:5]
 
-    context = {
-        "title": "Главная",
-        "page_obj": page_obj,
-        "products": page_obj.object_list,
-    }
-    return render(request, "catalog/home.html", context)
+        print("Последние 5 добавленных продуктов:")
+        for product in latest_products:
+            print(f"  [{product.id}] {product.name} — {product.price} ({product.category.name})")
+
+        return Product.objects.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Главная"
+        return context
 
 
-def product_detail(request, pk):
+class ProductDetailView(DetailView):
     """Страница с подробной информацией о товаре."""
-    product = get_object_or_404(Product.objects.select_related("category"), pk=pk)
-    context = {
-        "title": product.name,
-        "product": product,
-    }
-    return render(request, "catalog/product_detail.html", context)
+
+    model = Product
+    template_name = "catalog/product_detail.html"
+    context_object_name = "product"
+
+    def get_queryset(self):
+        return Product.objects.select_related("category")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = self.object.name
+        return context
 
 
-def product_create(request):
+class ProductCreateView(CreateView):
     """Форма добавления нового товара."""
-    if request.method == "POST":
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            product = form.save()
-            return redirect("catalog:product_detail", pk=product.pk)
-    else:
-        form = ProductForm()
 
-    context = {
-        "title": "Добавить товар",
-        "form": form,
-    }
-    return render(request, "catalog/product_form.html", context)
+    model = Product
+    form_class = ProductForm
+    template_name = "catalog/product_form.html"
+
+    def get_success_url(self):
+        return reverse("catalog:product_detail", kwargs={"pk": self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Добавить товар"
+        return context
 
 
-def contacts(request):
+class ContactsView(View):
     """Страница контактов + обработка формы обратной связи."""
-    contact_info = ContactInfo.objects.first()
 
-    context = {
-        "title": "Контакты",
-        "success": False,
-        "contact_info": contact_info,
-    }
+    template_name = "catalog/contacts.html"
 
-    if request.method == "POST":
+    def get(self, request, *args, **kwargs):
+        context = {
+            "title": "Контакты",
+            "success": False,
+            "contact_info": ContactInfo.objects.first(),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip()
         message = request.POST.get("message", "").strip()
@@ -88,7 +100,10 @@ def contacts(request):
         print(f"  Почта: {email}")
         print(f"  Сообщение: {message}")
 
-        context["success"] = True
-        context["name"] = name
-
-    return render(request, "catalog/contacts.html", context)
+        context = {
+            "title": "Контакты",
+            "success": True,
+            "name": name,
+            "contact_info": ContactInfo.objects.first(),
+        }
+        return render(request, self.template_name, context)

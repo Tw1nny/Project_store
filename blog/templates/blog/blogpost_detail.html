@@ -1,0 +1,23 @@
+{% extends "catalog/base.html" %}
+
+{% block content %}
+  <a href="{% url 'blog:blogpost_list' %}" class="btn btn-link ps-0 mb-3">&laquo; Назад к списку статей</a>
+
+  {% if not post.is_published %}
+    <div class="alert alert-warning">Статья не опубликована и не видна в общем списке.</div>
+  {% endif %}
+
+  <h1 class="mb-2">{{ post.title }}</h1>
+  <p class="text-muted mb-4">
+    {{ post.created_at|date:"d.m.Y H:i" }} · Просмотров: {{ post.views_count }}
+  </p>
+
+  {% if post.preview %}
+    <img src="{{ post.preview.url }}" class="img-fluid rounded product-detail-img mb-4" alt="{{ post.title }}">
+  {% endif %}
+
+  <div class="mb-4">{{ post.content|linebreaks }}</div>
+
+  <a href="{% url 'blog:blogpost_update' pk=post.pk %}" class="btn btn-outline-primary">Редактировать</a>
+  <a href="{% url 'blog:blogpost_delete' pk=post.pk %}" class="btn btn-outline-danger">Удалить</a>
+{% endblock %}

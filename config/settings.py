@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "catalog.apps.CatalogConfig",
+    "blog.apps.BlogConfig",
 ]
 
 MIDDLEWARE = [
@@ -97,3 +98,19 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --- Почта (доп. задание урока 5: письмо при 100 просмотрах статьи) ---
+# По умолчанию письма печатаются в консоль runserver. Чтобы отправлять
+# настоящие письма, задайте в .env EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+# и параметры SMTP-сервера.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.yandex.ru")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "465"))
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "True") == "True"
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False") == "True"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "webmaster@localhost")
+
+# Куда слать поздравление о 100 просмотрах (себе).
+BLOG_NOTIFY_EMAIL = os.getenv("BLOG_NOTIFY_EMAIL", EMAIL_HOST_USER)

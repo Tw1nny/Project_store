@@ -10,9 +10,11 @@
 3. **PostgreSQL, модели, админка, фикстуры** (урок 3) — подключена
    БД PostgreSQL, созданы модели `Category`/`Product`, настроена
    админка, добавлены фикстуры и кастомная management-команда.
-4. **Динамика и шаблоны** (урок 4, текущий) — детальная страница
+4. **Динамика и шаблоны** (урок 4) — детальная страница
    товара, общий базовый шаблон с подшаблоном меню, форма добавления
    товара, постраничный вывод списка товаров.
+5. **CBV и блог** (урок 5, текущий) — все контроллеры `catalog`
+   переписаны на классы, добавлено приложение `blog` с полным CRUD.
 
 Все слои оставлены в репозитории для истории выполнения домашних
 заданий; актуальная функциональность — Django-часть с подключённой БД.
@@ -49,7 +51,7 @@
 │   ├── models.py                  # Category, Product, ContactInfo
 │   ├── admin.py                   # регистрация моделей в админке
 │   ├── forms.py                   # ProductForm — форма добавления товара
-│   ├── views.py                   # home(), product_detail(), product_create(), contacts()
+│   ├── views.py                   # HomeView, ProductDetailView, ProductCreateView, ContactsView (CBV)
 │   ├── urls.py
 │   ├── migrations/
 │   │   └── 0001_initial.py        # миграция моделей
@@ -66,6 +68,15 @@
 │       ├── product_detail.html    # подробная страница товара
 │       ├── product_form.html      # форма добавления товара
 │       └── contacts.html          # выводит ContactInfo из БД
+│
+├── blog/                        # приложение блога (урок 5)
+│   ├── models.py                  # BlogPost
+│   ├── admin.py
+│   ├── forms.py                   # BlogPostForm
+│   ├── views.py                   # List/Detail/Create/Update/DeleteView
+│   ├── urls.py                    # всё под /blogs/
+│   ├── migrations/0001_initial.py
+│   └── templates/blog/            # list, detail, form, confirm_delete
 │
 ├── server.py                    # задание урока 1 (http.server)
 └── templates/                   # шаблоны для server.py
@@ -128,6 +139,10 @@
    - `http://127.0.0.1:8000/products/add/` — форма добавления товара;
    - `http://127.0.0.1:8000/contacts/` — контакты (данные из
      `ContactInfo`, заполняются через админку) + форма обратной связи;
+   - `http://127.0.0.1:8000/blogs/` — блог: только опубликованные статьи;
+   - `http://127.0.0.1:8000/blogs/create/` — новая статья;
+   - `http://127.0.0.1:8000/blogs/<id>/` — статья (каждое открытие +1 просмотр);
+   - `http://127.0.0.1:8000/blogs/<id>/update/` и `.../delete/` — правка и удаление;
    - `http://127.0.0.1:8000/admin/` — админка Django.
 
 ## Работа с Django shell (задание 5)
@@ -195,3 +210,24 @@ GitFlow: `main` — стабильный релиз, `develop` — интегр�
 | Подшаблон меню подключён во все шаблоны | `catalog/templates/catalog/includes/menu.html`, `{% include %}` в `base.html` |
 | Доп.: форма добавления товара, валидация, сохранение в БД | `catalog/forms.py` (`ProductForm`), `catalog/views.py` → `product_create()`, `product_form.html` |
 | Доп.: постраничный вывод товаров | `catalog/views.py` → `home()` (`Paginator`), блок пагинации в `home.html` |
+
+## Соответствие критериям урока 5 (CBV и блог)
+
+| Критерий | Где реализовано |
+|---|---|
+| Все контроллеры `catalog` — CBV | `catalog/views.py`: `HomeView` (ListView), `ProductDetailView` (DetailView), `ProductCreateView` (CreateView), `ContactsView` (View) |
+| Контакты — через `View`/`TemplateView` | `ContactsView(View)` с методами `get()`/`post()` |
+| Приложение `blog` создано и зарегистрировано | `blog/`, `INSTALLED_APPS` в `config/settings.py` |
+| Модель `BlogPost`: заголовок, содержимое, превью, дата создания, признак публикации, просмотры | `blog/models.py` |
+| `Meta` и `__str__` | `blog/models.py` |
+| CRUD только на CBV | `blog/views.py` |
+| Шаблоны наследуют базовый, меню подключено | `blog/templates/blog/*.html` → `{% extends "catalog/base.html" %}` |
+| Маршруты под `blogs/`, `include()` в основном `urls.py` | `blog/urls.py`, `config/urls.py` |
+| Все URL заканчиваются на `/` | `catalog/urls.py`, `blog/urls.py` |
+| Счётчик просмотров через `get_object` | `BlogPostDetailView.get_object()` |
+| Только опубликованные статьи через `get_queryset` | `BlogPostListView.get_queryset()` |
+| После редактирования — на страницу статьи | `BlogPostUpdateView.get_success_url()` |
+| Доп.: письмо при 100 просмотрах | `BlogPostDetailView.send_milestone_email()`, настройки почты в `config/settings.py` / `.env` |
+
+По умолчанию письмо печатается в консоль `runserver`. Чтобы приходило на
+настоящую почту, заполните блок «Почта» в `.env` (см. `.env.example`).
