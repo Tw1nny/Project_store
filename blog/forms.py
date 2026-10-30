@@ -3,21 +3,21 @@
 
 BlogPostForm — используется и для создания, и для редактирования статьи.
 Счётчик просмотров и дата создания в форму не входят: они заполняются
-автоматически.
+автоматически. Стили полей назначаются в __init__ через общий
+StyleFormMixin из приложения catalog.
 """
 
 from django import forms
 
 from blog.models import BlogPost
+from catalog.forms import StyleFormMixin
 
 
-class BlogPostForm(forms.ModelForm):
+class BlogPostForm(StyleFormMixin, forms.ModelForm):
     class Meta:
         model = BlogPost
         fields = ["title", "content", "preview", "is_published"]
-        widgets = {
-            "title": forms.TextInput(attrs={"class": "form-control"}),
-            "content": forms.Textarea(attrs={"class": "form-control", "rows": 8}),
-            "preview": forms.ClearableFileInput(attrs={"class": "form-control"}),
-            "is_published": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["content"].widget.attrs["rows"] = 8

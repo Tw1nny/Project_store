@@ -1,9 +1,13 @@
 {% extends "catalog/base.html" %}
 
 {% block content %}
-  <a href="{% url 'catalog:home' %}" class="btn btn-link ps-0 mb-3">&laquo; Назад к списку товаров</a>
+  {% if object %}
+    <a href="{% url 'catalog:product_detail' pk=object.pk %}" class="btn btn-link ps-0 mb-3">&laquo; Назад к товару</a>
+  {% else %}
+    <a href="{% url 'catalog:home' %}" class="btn btn-link ps-0 mb-3">&laquo; Назад к списку товаров</a>
+  {% endif %}
 
-  <h1 class="mb-4">Добавить товар</h1>
+  <h1 class="mb-4">{{ title }}</h1>
 
   <div class="row">
     <div class="col-md-6">
@@ -15,18 +19,28 @@
         {% endif %}
 
         {% for field in form %}
-          <div class="mb-3">
-            <label for="{{ field.id_for_label }}" class="form-label">
-              {{ field.label }}{% if field.field.required %} *{% endif %}
-            </label>
-            {{ field }}
-            {% if field.help_text %}
-              <div class="form-text">{{ field.help_text }}</div>
-            {% endif %}
-            {% for error in field.errors %}
-              <div class="text-danger small mt-1">{{ error }}</div>
-            {% endfor %}
-          </div>
+          {% if field.widget_type == "checkbox" %}
+            <div class="form-check mb-3">
+              {{ field }}
+              <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">
+                {{ field.label }}{% if field.field.required %} *{% endif %}
+              </label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
         {% endfor %}
 
         <button type="submit" class="btn btn-primary">Сохранить товар</button>

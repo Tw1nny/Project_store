@@ -13,8 +13,11 @@
 4. **Динамика и шаблоны** (урок 4) — детальная страница
    товара, общий базовый шаблон с подшаблоном меню, форма добавления
    товара, постраничный вывод списка товаров.
-5. **CBV и блог** (урок 5, текущий) — все контроллеры `catalog`
+5. **CBV и блог** (урок 5) — все контроллеры `catalog`
    переписаны на классы, добавлено приложение `blog` с полным CRUD.
+6. **Формы** (урок 6, текущий) — полный CRUD товаров на `django.forms`,
+   запрет «спамных» слов, проверка цены и загружаемых изображений,
+   стилизация полей через `__init__`.
 
 Все слои оставлены в репозитории для истории выполнения домашних
 заданий; актуальная функциональность — Django-часть с подключённой БД.
@@ -50,8 +53,8 @@
 ├── catalog/                     # приложение каталога товаров
 │   ├── models.py                  # Category, Product, ContactInfo
 │   ├── admin.py                   # регистрация моделей в админке
-│   ├── forms.py                   # ProductForm — форма добавления товара
-│   ├── views.py                   # HomeView, ProductDetailView, ProductCreateView, ContactsView (CBV)
+│   ├── forms.py                   # ProductForm, FORBIDDEN_WORDS, StyleFormMixin
+│   ├── views.py                   # HomeView, Product{Detail,Create,Update,Delete}View, ContactsView
 │   ├── urls.py
 │   ├── migrations/
 │   │   └── 0001_initial.py        # миграция моделей
@@ -66,7 +69,8 @@
 │       │   └── menu.html          # подшаблон главного меню (include в base.html)
 │       ├── home.html              # список товаров + пагинация
 │       ├── product_detail.html    # подробная страница товара
-│       ├── product_form.html      # форма добавления товара
+│       ├── product_form.html      # форма создания/редактирования товара
+│       ├── product_confirm_delete.html
 │       └── contacts.html          # выводит ContactInfo из БД
 │
 ├── blog/                        # приложение блога (урок 5)
@@ -137,6 +141,8 @@
      товаров (в консоли увидите список последних 5 продуктов);
    - `http://127.0.0.1:8000/products/<id>/` — подробная страница товара;
    - `http://127.0.0.1:8000/products/add/` — форма добавления товара;
+   - `http://127.0.0.1:8000/products/<id>/update/` и `.../delete/` —
+     редактирование и удаление товара;
    - `http://127.0.0.1:8000/contacts/` — контакты (данные из
      `ContactInfo`, заполняются через админку) + форма обратной связи;
    - `http://127.0.0.1:8000/blogs/` — блог: только опубликованные статьи;
@@ -231,3 +237,15 @@ GitFlow: `main` — стабильный релиз, `develop` — интегр�
 
 По умолчанию письмо печатается в консоль `runserver`. Чтобы приходило на
 настоящую почту, заполните блок «Почта» в `.env` (см. `.env.example`).
+
+## Соответствие критериям урока 6 (формы)
+
+| Критерий | Где реализовано |
+|---|---|
+| PR из ветки домашки в `develop`; `.env`, `__pycache__`, `.DS_Store` и др. в `.gitignore` | `.gitignore` |
+| Зависимости в `requirements.txt`, лишнего нет | `requirements.txt` |
+| Создание, просмотр, редактирование, удаление товаров | `catalog/views.py` → `ProductCreateView`, `ProductDetailView`, `ProductUpdateView`, `ProductDeleteView`; `catalog/urls.py` |
+| Запрещённые слова вынесены в константу, проверяются в `name` и `description`, регистр игнорируется | `catalog/forms.py` → `FORBIDDEN_WORDS`, `clean_name()`, `clean_description()` |
+| Отрицательная цена — понятная ошибка | `catalog/forms.py` → `clean_price()` |
+| Стили у всех полей через `__init__`, чекбокс как элемент формы | `catalog/forms.py` → `StyleFormMixin` (чекбокс получает `form-check-input`, пример — «Опубликовано» в форме статьи блога) |
+| Доп.: загрузка изображения, только JPEG/PNG, не больше 5 МБ | `catalog/forms.py` → `clean_image()` |
