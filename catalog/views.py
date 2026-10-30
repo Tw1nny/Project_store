@@ -1,20 +1,20 @@
 """
-Контроллеры приложения catalog (CBV, урок 5).
+Контроллеры приложения catalog (CBV).
 
 - HomeView: главная страница — список товаров (ListView), с пагинацией
-  и печатью в консоль 5 последних добавленных продуктов (доп. задание
-  прошлого урока, сохранено через переопределение get_queryset).
-- ProductDetailView: страница с подробной информацией о товаре по pk
-  (DetailView, с select_related через get_queryset).
-- ProductCreateView: форма добавления нового товара (CreateView).
+  и печатью в консоль 5 последних добавленных продуктов.
+- ProductDetailView: подробная страница товара (DetailView).
+- ProductCreateView / ProductUpdateView / ProductDeleteView: создание,
+  редактирование и удаление товара (CRUD, урок 6). Создание
+  и редактирование используют одну форму ProductForm и один шаблон.
 - ContactsView: страница контактов с данными из модели ContactInfo и
   обработкой формы обратной связи (View — отдельные get()/post()).
 """
 
 from django.shortcuts import render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from catalog.forms import ProductForm
 from catalog.models import ContactInfo, Product
@@ -74,6 +74,36 @@ class ProductCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Добавить товар"
+        return context
+
+
+class ProductUpdateView(UpdateView):
+    """Редактирование товара; после сохранения — на страницу товара."""
+
+    model = Product
+    form_class = ProductForm
+    template_name = "catalog/product_form.html"
+
+    def get_success_url(self):
+        return reverse("catalog:product_detail", kwargs={"pk": self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Редактировать товар"
+        return context
+
+
+class ProductDeleteView(DeleteView):
+    """Удаление товара с подтверждением; после удаления — на главную."""
+
+    model = Product
+    template_name = "catalog/product_confirm_delete.html"
+    context_object_name = "product"
+    success_url = reverse_lazy("catalog:home")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Удаление товара"
         return context
 
 

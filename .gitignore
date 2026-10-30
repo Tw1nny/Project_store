@@ -1,6 +1,8 @@
 .idea
 venv/
 __pycache__/
+*.py[cod]
+.venv/
 env/
 *.sqlite*
 
@@ -11,3 +13,8 @@ media/
 
 # Переменные окружения (реальные секреты) — коммитится только .env.example
 .env
+
+# Системные файлы ОС
+.DS_Store
+Thumbs.db
+desktop.ini
