@@ -127,24 +127,30 @@ class ProductForm(StyleFormMixin, forms.ModelForm):
         return price
 
     def clean_image(self):
-        image = self.cleaned_data.get("image")
+        return validate_uploaded_image(self.cleaned_data.get("image"))
 
-        # Новый файл не загружали: поле пустое, оставили прежнее изображение
-        # или отметили «Очистить». Проверять нечего.
-        if not isinstance(image, UploadedFile):
-            return image
 
-        if image.size > MAX_IMAGE_SIZE:
-            size_mb = image.size / (1024 * 1024)
-            raise forms.ValidationError(
-                f"Файл весит {size_mb:.1f} МБ, а максимум — {MAX_IMAGE_SIZE_MB} МБ."
-            )
+def validate_uploaded_image(image):
+    """Проверяет загруженное изображение: JPEG или PNG, не больше 5 МБ.
 
-        extension = os.path.splitext(image.name)[1].lower()
-        # Django уже открыл файл через Pillow и сохранил результат в image.image,
-        # поэтому проверяем и расширение, и реальный формат содержимого.
-        image_format = getattr(getattr(image, "image", None), "format", None)
-        if extension not in ALLOWED_IMAGE_EXTENSIONS or image_format not in ALLOWED_IMAGE_FORMATS:
-            raise forms.ValidationError("Можно загрузить только изображение в формате JPEG или PNG.")
-
+    Используется в форме товара и в форме профиля пользователя (аватар).
+    """
+    # Новый файл не загружали: поле пустое, оставили прежнее изображение
+    # или отметили «Очистить». Проверять нечего.
+    if not isinstance(image, UploadedFile):
         return image
+
+    if image.size > MAX_IMAGE_SIZE:
+        size_mb = image.size / (1024 * 1024)
+        raise forms.ValidationError(
+            f"Файл весит {size_mb:.1f} МБ, а максимум — {MAX_IMAGE_SIZE_MB} МБ."
+        )
+
+    extension = os.path.splitext(image.name)[1].lower()
+    # Django уже открыл файл через Pillow и сохранил результат в image.image,
+    # поэтому проверяем и расширение, и реальный формат содержимого.
+    image_format = getattr(getattr(image, "image", None), "format", None)
+    if extension not in ALLOWED_IMAGE_EXTENSIONS or image_format not in ALLOWED_IMAGE_FORMATS:
+        raise forms.ValidationError("Можно загрузить только изображение в формате JPEG или PNG.")
+
+    return image

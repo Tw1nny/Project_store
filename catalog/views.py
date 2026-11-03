@@ -2,15 +2,19 @@
 Контроллеры приложения catalog (CBV).
 
 - HomeView: главная страница — список товаров (ListView), с пагинацией
-  и печатью в консоль 5 последних добавленных продуктов.
+  и печатью в консоль 5 последних добавленных продуктов. Единственная
+  страница товаров, доступная без входа.
 - ProductDetailView: подробная страница товара (DetailView).
 - ProductCreateView / ProductUpdateView / ProductDeleteView: создание,
   редактирование и удаление товара (CRUD, урок 6). Создание
   и редактирование используют одну форму ProductForm и один шаблон.
+  Карточка товара и все изменения доступны только вошедшим
+  пользователям (LoginRequiredMixin, урок 7).
 - ContactsView: страница контактов с данными из модели ContactInfo и
   обработкой формы обратной связи (View — отдельные get()/post()).
 """
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -45,7 +49,7 @@ class HomeView(ListView):
         return context
 
 
-class ProductDetailView(DetailView):
+class ProductDetailView(LoginRequiredMixin, DetailView):
     """Страница с подробной информацией о товаре."""
 
     model = Product
@@ -61,7 +65,7 @@ class ProductDetailView(DetailView):
         return context
 
 
-class ProductCreateView(CreateView):
+class ProductCreateView(LoginRequiredMixin, CreateView):
     """Форма добавления нового товара."""
 
     model = Product
@@ -77,7 +81,7 @@ class ProductCreateView(CreateView):
         return context
 
 
-class ProductUpdateView(UpdateView):
+class ProductUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирование товара; после сохранения — на страницу товара."""
 
     model = Product
@@ -93,7 +97,7 @@ class ProductUpdateView(UpdateView):
         return context
 
 
-class ProductDeleteView(DeleteView):
+class ProductDeleteView(LoginRequiredMixin, DeleteView):
     """Удаление товара с подтверждением; после удаления — на главную."""
 
     model = Product

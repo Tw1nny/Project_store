@@ -3,7 +3,8 @@
 
 Маршруты приложений подключаются через include():
 - catalog — главная, товары, контакты (catalog/urls.py);
-- blog — все адреса под префиксом blogs/ (blog/urls.py).
+- blog — все адреса под префиксом blogs/ (blog/urls.py);
+- users — регистрация, вход, выход, профиль под префиксом users/.
 Все URL проекта заканчиваются на «/».
 """
 
@@ -15,6 +16,7 @@ from django.urls import include, path
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("blogs/", include("blog.urls")),
+    path("users/", include("users.urls")),
     path("", include("catalog.urls")),
 ]
 

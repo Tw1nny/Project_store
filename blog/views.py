@@ -11,9 +11,13 @@
 - BlogPostUpdateView: редактирование; после успешного сохранения
   пользователь перенаправляется на страницу этой статьи (success_url).
 - BlogPostDeleteView: удаление с подтверждением.
+
+Читать блог может любой посетитель, а создавать, редактировать
+и удалять статьи — только вошедшие пользователи (защита форм от ботов).
 """
 
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
 from django.db.models import F
 from django.urls import reverse, reverse_lazy
@@ -80,7 +84,7 @@ class BlogPostDetailView(DetailView):
         return context
 
 
-class BlogPostCreateView(CreateView):
+class BlogPostCreateView(LoginRequiredMixin, CreateView):
     model = BlogPost
     form_class = BlogPostForm
     template_name = "blog/blogpost_form.html"
@@ -94,7 +98,7 @@ class BlogPostCreateView(CreateView):
         return context
 
 
-class BlogPostUpdateView(UpdateView):
+class BlogPostUpdateView(LoginRequiredMixin, UpdateView):
     model = BlogPost
     form_class = BlogPostForm
     template_name = "blog/blogpost_form.html"
@@ -109,7 +113,7 @@ class BlogPostUpdateView(UpdateView):
         return context
 
 
-class BlogPostDeleteView(DeleteView):
+class BlogPostDeleteView(LoginRequiredMixin, DeleteView):
     model = BlogPost
     template_name = "blog/blogpost_confirm_delete.html"
     context_object_name = "post"
