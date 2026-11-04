@@ -2,7 +2,8 @@
 Подшаблон главного меню (боковой сайдбар). Подключается во все страницы
 через тег include в base.html, чтобы не дублировать разметку меню
 в каждом шаблоне. Пункты для добавления товаров и статей видны только
-вошедшим пользователям; внизу — вход/регистрация или профиль/выход.
+вошедшим пользователям, «Новая статья» — только контент-менеджерам;
+внизу — вход/регистрация или профиль/выход.
 {% endcomment %}
 <nav class="sidebar d-flex flex-column flex-shrink-0 p-3" style="width: 260px;">
   <a href="{% url 'catalog:home' %}" class="brand d-flex align-items-center mb-3 text-white text-decoration-none">
@@ -37,7 +38,7 @@
         📝 Блог
       </a>
     </li>
-    {% if user.is_authenticated %}
+    {% if perms.blog.add_blogpost %}
       <li class="nav-item">
         <a href="{% url 'blog:blogpost_create' %}"
            class="nav-link {% if request.resolver_match.url_name == 'blogpost_create' %}active{% endif %}">

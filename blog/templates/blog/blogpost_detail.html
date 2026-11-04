@@ -18,8 +18,10 @@
 
   <div class="mb-4">{{ post.content|linebreaks }}</div>
 
-  {% if user.is_authenticated %}
+  {% if perms.blog.change_blogpost %}
     <a href="{% url 'blog:blogpost_update' pk=post.pk %}" class="btn btn-outline-primary">Редактировать</a>
+  {% endif %}
+  {% if perms.blog.delete_blogpost %}
     <a href="{% url 'blog:blogpost_delete' pk=post.pk %}" class="btn btn-outline-danger">Удалить</a>
   {% endif %}
 {% endblock %}

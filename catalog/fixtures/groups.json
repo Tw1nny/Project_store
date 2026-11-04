@@ -1,0 +1,48 @@
+[
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Модератор продуктов",
+    "permissions": [
+      [
+        "can_unpublish_product",
+        "catalog",
+        "product"
+      ],
+      [
+        "delete_product",
+        "catalog",
+        "product"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Контент-менеджер",
+    "permissions": [
+      [
+        "add_blogpost",
+        "blog",
+        "blogpost"
+      ],
+      [
+        "change_blogpost",
+        "blog",
+        "blogpost"
+      ],
+      [
+        "delete_blogpost",
+        "blog",
+        "blogpost"
+      ],
+      [
+        "view_blogpost",
+        "blog",
+        "blogpost"
+      ]
+    ]
+  }
+}
+]

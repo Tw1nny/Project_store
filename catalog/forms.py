@@ -7,9 +7,12 @@
   назначается подходящий Bootstrap-класс (чекбокс — form-check-input,
   выпадающий список — form-select, остальные — form-control).
   Используется и в формах приложения blog.
-- ProductForm — создание и редактирование товара: проверка запрещённых
-  слов, неотрицательной цены и загружаемого изображения
-  (JPEG/PNG, не больше 5 МБ).
+- ProductForm — создание и редактирование товара владельцем: проверка
+  запрещённых слов, неотрицательной цены и загружаемого изображения
+  (JPEG/PNG, не больше 5 МБ). Владелец сам решает, публиковать ли товар.
+- ProductModeratorForm — форма модератора: только статус публикации,
+  и модератор может лишь снять товар с публикации (право
+  can_unpublish_product), но не опубликовать его.
 """
 
 import os
@@ -83,13 +86,14 @@ class StyleFormMixin:
 class ProductForm(StyleFormMixin, forms.ModelForm):
     class Meta:
         model = Product
-        fields = ["name", "description", "image", "category", "price"]
+        fields = ["name", "description", "image", "category", "price", "is_published"]
         labels = {
             "name": "Наименование",
             "description": "Описание",
             "image": "Изображение",
             "category": "Категория",
             "price": "Цена",
+            "is_published": "Опубликовать товар",
         }
         help_texts = {
             "image": f"Формат JPEG или PNG, размер не больше {MAX_IMAGE_SIZE_MB} МБ.",
@@ -128,6 +132,24 @@ class ProductForm(StyleFormMixin, forms.ModelForm):
 
     def clean_image(self):
         return validate_uploaded_image(self.cleaned_data.get("image"))
+
+
+class ProductModeratorForm(StyleFormMixin, forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ["is_published"]
+        labels = {"is_published": "Опубликован"}
+        help_texts = {
+            "is_published": "Модератор может только снять товар с публикации.",
+        }
+
+    def clean_is_published(self):
+        is_published = self.cleaned_data.get("is_published")
+        if is_published and not self.instance.is_published:
+            raise forms.ValidationError(
+                "Модератор не может публиковать товары — только снимать их с публикации."
+            )
+        return is_published
 
 
 def validate_uploaded_image(image):
