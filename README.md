@@ -13,8 +13,15 @@
 4. **Динамика и шаблоны** (урок 4) — детальная страница
    товара, общий базовый шаблон с подшаблоном меню, форма добавления
    товара, постраничный вывод списка товаров.
-5. **CBV и блог** (урок 5, текущий) — все контроллеры `catalog`
+5. **CBV и блог** (урок 5) — все контроллеры `catalog`
    переписаны на классы, добавлено приложение `blog` с полным CRUD.
+6. **Формы** (урок 6) — полный CRUD товаров на `django.forms`,
+   запрет «спамных» слов, проверка цены и загружаемых изображений,
+   стилизация полей через `__init__`.
+7. **Пользователи** (урок 7, текущий) — приложение `users`: своя модель
+   пользователя со входом по email, регистрация с приветственным письмом,
+   вход/выход, редактирование профиля; страницы товаров (кроме списка)
+   доступны только вошедшим пользователям.
 
 Все слои оставлены в репозитории для истории выполнения домашних
 заданий; актуальная функциональность — Django-часть с подключённой БД.
@@ -50,8 +57,8 @@
 ├── catalog/                     # приложение каталога товаров
 │   ├── models.py                  # Category, Product, ContactInfo
 │   ├── admin.py                   # регистрация моделей в админке
-│   ├── forms.py                   # ProductForm — форма добавления товара
-│   ├── views.py                   # HomeView, ProductDetailView, ProductCreateView, ContactsView (CBV)
+│   ├── forms.py                   # ProductForm, FORBIDDEN_WORDS, StyleFormMixin
+│   ├── views.py                   # HomeView, Product{Detail,Create,Update,Delete}View, ContactsView
 │   ├── urls.py
 │   ├── migrations/
 │   │   └── 0001_initial.py        # миграция моделей
@@ -66,7 +73,8 @@
 │       │   └── menu.html          # подшаблон главного меню (include в base.html)
 │       ├── home.html              # список товаров + пагинация
 │       ├── product_detail.html    # подробная страница товара
-│       ├── product_form.html      # форма добавления товара
+│       ├── product_form.html      # форма создания/редактирования товара
+│       ├── product_confirm_delete.html
 │       └── contacts.html          # выводит ContactInfo из БД
 │
 ├── blog/                        # приложение блога (урок 5)
@@ -77,6 +85,15 @@
 │   ├── urls.py                    # всё под /blogs/
 │   ├── migrations/0001_initial.py
 │   └── templates/blog/            # list, detail, form, confirm_delete
+│
+├── users/                       # пользователи (урок 7)
+│   ├── models.py                  # User (AbstractUser, вход по email), UserManager
+│   ├── admin.py                   # User в админке
+│   ├── forms.py                   # регистрация, вход, профиль
+│   ├── views.py                   # RegisterView, UserLoginView, ProfileUpdateView
+│   ├── urls.py                    # всё под /users/
+│   ├── migrations/0001_initial.py
+│   └── templates/users/           # register, login, profile_form
 │
 ├── server.py                    # задание урока 1 (http.server)
 └── templates/                   # шаблоны для server.py
@@ -115,7 +132,8 @@
    python manage.py migrate
    ```
 
-5. Создайте суперпользователя:
+5. Создайте суперпользователя (Django спросит email и пароль —
+   имени пользователя больше нет):
 
    ```bash
    python manage.py createsuperuser
@@ -137,13 +155,20 @@
      товаров (в консоли увидите список последних 5 продуктов);
    - `http://127.0.0.1:8000/products/<id>/` — подробная страница товара;
    - `http://127.0.0.1:8000/products/add/` — форма добавления товара;
+   - `http://127.0.0.1:8000/products/<id>/update/` и `.../delete/` —
+     редактирование и удаление товара;
    - `http://127.0.0.1:8000/contacts/` — контакты (данные из
      `ContactInfo`, заполняются через админку) + форма обратной связи;
    - `http://127.0.0.1:8000/blogs/` — блог: только опубликованные статьи;
    - `http://127.0.0.1:8000/blogs/create/` — новая статья;
    - `http://127.0.0.1:8000/blogs/<id>/` — статья (каждое открытие +1 просмотр);
    - `http://127.0.0.1:8000/blogs/<id>/update/` и `.../delete/` — правка и удаление;
+   - `http://127.0.0.1:8000/users/register/`, `/users/login/`,
+     `/users/profile/` — регистрация, вход, профиль;
    - `http://127.0.0.1:8000/admin/` — админка Django.
+
+   Без входа доступны только список товаров, контакты, чтение блога,
+   вход и регистрация. Остальные страницы перенаправляют на вход.
 
 ## Работа с Django shell (задание 5)
 
@@ -231,3 +256,55 @@ GitFlow: `main` — стабильный релиз, `develop` — интегр�
 
 По умолчанию письмо печатается в консоль `runserver`. Чтобы приходило на
 настоящую почту, заполните блок «Почта» в `.env` (см. `.env.example`).
+
+## Соответствие критериям урока 6 (формы)
+
+| Критерий | Где реализовано |
+|---|---|
+| PR из ветки домашки в `develop`; `.env`, `__pycache__`, `.DS_Store` и др. в `.gitignore` | `.gitignore` |
+| Зависимости в `requirements.txt`, лишнего нет | `requirements.txt` |
+| Создание, просмотр, редактирование, удаление товаров | `catalog/views.py` → `ProductCreateView`, `ProductDetailView`, `ProductUpdateView`, `ProductDeleteView`; `catalog/urls.py` |
+| Запрещённые слова вынесены в константу, проверяются в `name` и `description`, регистр игнорируется | `catalog/forms.py` → `FORBIDDEN_WORDS`, `clean_name()`, `clean_description()` |
+| Отрицательная цена — понятная ошибка | `catalog/forms.py` → `clean_price()` |
+| Стили у всех полей через `__init__`, чекбокс как элемент формы | `catalog/forms.py` → `StyleFormMixin` (чекбокс получает `form-check-input`, пример — «Опубликовано» в форме статьи блога) |
+| Доп.: загрузка изображения, только JPEG/PNG, не больше 5 МБ | `catalog/forms.py` → `clean_image()` |
+
+## Переход на свою модель пользователя (урок 7)
+
+Django не умеет менять `AUTH_USER_MODEL` в базе, где уже применены
+миграции со стандартным пользователем. Поэтому при переходе на урок 7
+базу нужно создать заново (данные каталога вернутся из фикстур):
+
+```bash
+# 1. Остановите runserver и пересоздайте БД (имя базы и пользователя —
+#    как в вашем .env; то же можно сделать в pgAdmin)
+psql -U postgres -c "DROP DATABASE store_db;"
+psql -U postgres -c "CREATE DATABASE store_db OWNER store_user;"
+
+# 2. Применить миграции и заполнить данными
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py fill_catalog
+```
+
+Статьи блога и контакты из `ContactInfo` после этого нужно будет
+добавить заново через сайт или админку.
+
+## Соответствие критериям урока 7 (пользователи)
+
+| Критерий | Где реализовано |
+|---|---|
+| Приложение для пользователей создано и подключено | `users/`, `INSTALLED_APPS` в `config/settings.py` |
+| Модель наследуется от `AbstractUser`, email — `USERNAME_FIELD` | `users/models.py` → `User`, `AUTH_USER_MODEL = "users.User"` |
+| Поля: аватар (`ImageField`), телефон (`CharField` с проверкой формата), страна (`CharField`) | `users/models.py` |
+| Форма регистрации: email, пароль и подтверждение пароля | `users/forms.py` → `UserRegisterForm` (на основе `UserCreationForm`) |
+| Создание пользователя и обработка ошибок: несовпадение паролей, слабый пароль, некорректный или занятый email | `UserRegisterForm`, `users/views.py` → `RegisterView` |
+| Приветственное письмо; если отправить не удалось — аккаунт создаётся, пользователь видит предупреждение | `RegisterView.send_welcome_email()` |
+| Вход по email и паролю, ошибки показываются пользователю | `users/forms.py` → `UserLoginForm`, `users/views.py` → `UserLoginView` |
+| Страницы товаров (просмотр, создание, изменение, удаление) только для вошедших | `catalog/views.py` → `LoginRequiredMixin` |
+| Список товаров доступен без входа | `catalog/views.py` → `HomeView` |
+| Доп.: редактирование профиля | `users/views.py` → `ProfileUpdateView`, `/users/profile/` |
+
+Письма по умолчанию печатаются в консоль `runserver`. Чтобы они
+приходили на настоящую почту, заполните блок «Почта» в `.env`
+(см. `.env.example`).

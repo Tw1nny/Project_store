@@ -27,7 +27,11 @@
         <li>Обновлён: {{ product.updated_at|date:"d.m.Y H:i" }}</li>
       </ul>
 
-      <a href="#" class="btn btn-primary">Купить</a>
+      <div class="d-flex gap-2">
+        <a href="#" class="btn btn-primary">Купить</a>
+        <a href="{% url 'catalog:product_update' pk=product.pk %}" class="btn btn-outline-secondary">Редактировать</a>
+        <a href="{% url 'catalog:product_delete' pk=product.pk %}" class="btn btn-outline-danger">Удалить</a>
+      </div>
     </div>
   </div>
 {% endblock %}

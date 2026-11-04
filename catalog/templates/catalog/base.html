@@ -33,6 +33,12 @@
   <!-- БОДИ -->
   <div class="flex-grow-1 d-flex flex-column">
     <main class="content flex-grow-1">
+      {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+        </div>
+      {% endfor %}
       {% block content %}{% endblock %}
     </main>
 
