@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "catalog.apps.CatalogConfig",
     "blog.apps.BlogConfig",
+    "users.apps.UsersConfig",
 ]
 
 MIDDLEWARE = [
@@ -99,7 +100,15 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# --- Почта (доп. задание урока 5: письмо при 100 просмотрах статьи) ---
+# --- Пользователи (урок 7) ---
+# Своя модель пользователя: вход по email вместо username.
+AUTH_USER_MODEL = "users.User"
+# Куда отправлять неавторизованного пользователя и куда — после входа/выхода.
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "catalog:home"
+LOGOUT_REDIRECT_URL = "catalog:home"
+
+# --- Почта (письмо при 100 просмотрах статьи и приветствие после регистрации) ---
 # По умолчанию письма печатаются в консоль runserver. Чтобы отправлять
 # настоящие письма, задайте в .env EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 # и параметры SMTP-сервера.

@@ -1,0 +1,23 @@
+{% extends "catalog/base.html" %}
+
+{% block content %}
+  <h1 class="mb-2">Вход</h1>
+  <p class="text-muted mb-4">
+    Нет аккаунта? <a href="{% url 'users:register' %}">Зарегистрироваться</a>
+  </p>
+
+  {% if next and not user.is_authenticated %}
+    <div class="alert alert-info">Чтобы открыть эту страницу, войдите в аккаунт.</div>
+  {% endif %}
+
+  <div class="row">
+    <div class="col-md-5">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% include "users/includes/form_fields.html" %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="btn btn-primary">Войти</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

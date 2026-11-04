@@ -15,6 +15,9 @@
       {% endif %}
     </div>
     <div class="col-md-6">
+      {% if not product.is_published %}
+        <span class="badge text-bg-warning mb-2">Не опубликован</span>
+      {% endif %}
       <h1 class="mb-2">{{ product.name }}</h1>
       <p class="text-muted mb-3">Категория: {{ product.category.name }}</p>
       <h2 class="h3 text-primary mb-4">{{ product.price }} ₽</h2>
@@ -25,9 +28,24 @@
       <ul class="list-unstyled text-muted small mt-4">
         <li>Добавлен: {{ product.created_at|date:"d.m.Y H:i" }}</li>
         <li>Обновлён: {{ product.updated_at|date:"d.m.Y H:i" }}</li>
+        <li>Владелец: {{ product.owner.email|default:"не указан" }}</li>
       </ul>
 
-      <a href="#" class="btn btn-primary">Купить</a>
+      <div class="d-flex gap-2">
+        <a href="#" class="btn btn-primary">Купить</a>
+        {% comment %}
+          Редактировать — владелец (вся карточка) или модератор (только статус публикации).
+          Удалить — владелец или модератор с правом на удаление.
+        {% endcomment %}
+        {% if product.owner_id == user.pk or perms.catalog.can_unpublish_product %}
+          <a href="{% url 'catalog:product_update' pk=product.pk %}" class="btn btn-outline-secondary">
+            {% if product.owner_id == user.pk %}Редактировать{% else %}Модерировать{% endif %}
+          </a>
+        {% endif %}
+        {% if product.owner_id == user.pk or perms.catalog.delete_product %}
+          <a href="{% url 'catalog:product_delete' pk=product.pk %}" class="btn btn-outline-danger">Удалить</a>
+        {% endif %}
+      </div>
     </div>
   </div>
 {% endblock %}
