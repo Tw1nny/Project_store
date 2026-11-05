@@ -22,9 +22,11 @@
    пользователя со входом по email, регистрация с приветственным письмом,
    вход/выход, редактирование профиля; страницы товаров (кроме списка)
    доступны только вошедшим пользователям.
-8. **Права доступа** (урок 8, текущий) — у товара есть владелец и статус
+8. **Права доступа** (урок 8) — у товара есть владелец и статус
    публикации, группа «Модератор продуктов» снимает товары с публикации
    и удаляет любые товары, группа «Контент-менеджер» управляет блогом.
+9. **Кеширование** (урок 9, текущий) — Redis как бэкенд кеша, кеш страницы
+   товара, страница «товары категории» с низкоуровневым кешем.
 
 Все слои оставлены в репозитории для истории выполнения домашних
 заданий; актуальная функциональность — Django-часть с подключённой БД.
@@ -37,6 +39,7 @@
 - python-dotenv (переменные окружения)
 - Pillow (работа с изображениями продуктов)
 - ipython (удобный Django shell)
+- Redis + redis-py (кеширование)
 - Bootstrap 5 (подключается с CDN)
 
 ## Структура проекта
@@ -61,6 +64,8 @@
 │   ├── models.py                  # Category, Product, ContactInfo
 │   ├── admin.py                   # регистрация моделей в админке
 │   ├── forms.py                   # ProductForm, FORBIDDEN_WORDS, StyleFormMixin
+│   ├── services.py                # товары категории + кеш в Redis (урок 9)
+│   ├── signals.py                 # сброс кеша при изменении товаров
 │   ├── views.py                   # HomeView, Product{Detail,Create,Update,Delete}View, ContactsView
 │   ├── urls.py
 │   ├── migrations/
@@ -80,6 +85,7 @@
 │       ├── product_detail.html    # подробная страница товара
 │       ├── product_form.html      # форма создания/редактирования товара
 │       ├── product_confirm_delete.html
+│       ├── category_products.html # товары одной категории
 │       └── contacts.html          # выводит ContactInfo из БД
 │
 ├── blog/                        # приложение блога (урок 5)
@@ -162,6 +168,7 @@
    - `http://127.0.0.1:8000/products/add/` — форма добавления товара;
    - `http://127.0.0.1:8000/products/<id>/update/` и `.../delete/` —
      редактирование и удаление товара;
+   - `http://127.0.0.1:8000/categories/<id>/` — все товары категории;
    - `http://127.0.0.1:8000/contacts/` — контакты (данные из
      `ContactInfo`, заполняются через админку) + форма обратной связи;
    - `http://127.0.0.1:8000/blogs/` — блог: только опубликованные статьи;
@@ -357,3 +364,59 @@ python manage.py create_groups      # или: python manage.py loaddata groups.j
 | Изменить или удалить товар может только владелец или модератор | `ProductUpdateView`, `ProductDeleteView` (иначе 403 «Нет доступа») |
 | Кнопки редактирования и удаления видны только владельцу и модератору | `catalog/templates/catalog/product_detail.html` |
 | Доп.: группа «Контент-менеджер», остальные не могут менять блог | `create_groups`, `blog/views.py` → `PermissionRequiredMixin` |
+
+## Кеширование в Redis (урок 9)
+
+### Установка Redis
+
+Redis официально не выпускается под Windows. Варианты (любой из них):
+
+- **WSL** (Ubuntu внутри Windows):
+  ```bash
+  wsl --install                      # один раз, затем перезагрузка
+  # дальше в терминале Ubuntu:
+  sudo apt update && sudo apt install redis-server
+  sudo service redis-server start
+  ```
+- **Docker Desktop**: `docker run -d --name redis -p 6379:6379 redis`
+- **Memurai** — совместимый с Redis сервер для Windows (Developer Edition
+  бесплатна): https://www.memurai.com/
+
+Проверка: `redis-cli ping` должен ответить `PONG`.
+
+Установите клиент для Python и проверьте настройки в `.env`
+(см. `.env.example`):
+
+```bash
+pip install -r requirements.txt
+```
+
+```
+CACHE_ENABLED=True
+REDIS_URL=redis://127.0.0.1:6379/1
+```
+
+`CACHE_ENABLED=False` отключает кеш (проект работает и без Redis).
+
+### Что кешируется
+
+| Что | Как | Ключ | Время хранения |
+|---|---|---|---|
+| Страница одного товара `/products/<id>/` | `cache_page` (+ `vary_on_cookie`) | формирует Django | 15 минут |
+| Список товаров категории | низкоуровневый кеш в сервисе `get_products_by_category` | `category_{id}` | 15 минут |
+
+При изменении, переносе или удалении товара кеш его категории и его
+страницы сбрасывается (`catalog/signals.py`), поэтому изменения видны
+сразу. Посмотреть ключи: `redis-cli -n 1 keys "*"` — Django добавляет к
+ключу префикс версии, например `:1:category_1`.
+
+## Соответствие критериям урока 9 (кеширование)
+
+| Критерий | Где реализовано |
+|---|---|
+| Зависимости: `redis` | `requirements.txt` |
+| Настройки Redis в `settings.py` | `config/settings.py` → `CACHES` (`RedisCache`, `LOCATION` из `.env`), `CACHE_ENABLED` |
+| Кеширование страницы товара | `catalog/urls.py` → `cache_product_page` (`cache_page` на 15 минут), `catalog/services.py` |
+| Сервис возвращает все товары категории по её ID | `catalog/services.py` → `get_products_by_category(category_id)` |
+| Отдельные представление и шаблон | `catalog/views.py` → `CategoryProductsView`, `catalog/templates/catalog/category_products.html`, адрес `/categories/<id>/` |
+| Низкоуровневый кеш: ключ `category_{id}`, TTL задан | `get_products_by_category()` → `cache.get` / `cache.set(..., CATEGORY_PRODUCTS_CACHE_TIMEOUT)` |

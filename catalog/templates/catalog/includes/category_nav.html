@@ -1,0 +1,15 @@
+{% comment %}
+Ссылки на категории товаров. Ожидает в контексте categories и,
+на странице категории, category — текущую категорию.
+{% endcomment %}
+{% if categories %}
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+    <span class="text-muted me-1">Категории:</span>
+    <a href="{% url 'catalog:home' %}"
+       class="btn btn-sm {% if not category %}btn-dark{% else %}btn-outline-secondary{% endif %}">Все товары</a>
+    {% for item in categories %}
+      <a href="{% url 'catalog:category_products' pk=item.pk %}"
+         class="btn btn-sm {% if category.pk == item.pk %}btn-dark{% else %}btn-outline-secondary{% endif %}">{{ item.name }}</a>
+    {% endfor %}
+  </div>
+{% endif %}

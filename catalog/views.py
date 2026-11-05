@@ -8,6 +8,9 @@
 - ProductCreateView / ProductUpdateView / ProductDeleteView: создание,
   редактирование и удаление товара. Доступны только вошедшим
   пользователям (LoginRequiredMixin, урок 7).
+- CategoryProductsView: все опубликованные товары выбранной категории.
+  Данные берёт из сервиса get_products_by_category (catalog/services.py),
+  который кеширует список в Redis под ключом category_{id} (урок 9).
 - ContactsView: страница контактов с данными из модели ContactInfo и
   обработкой формы обратной связи (View — отдельные get()/post()).
 
@@ -24,13 +27,14 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from catalog.forms import ProductForm, ProductModeratorForm
-from catalog.models import ContactInfo, Product
+from catalog.models import Category, ContactInfo, Product
+from catalog.services import get_products_by_category
 
 PRODUCTS_PER_PAGE = 6
 
@@ -76,6 +80,7 @@ class HomeView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Главная"
+        context["categories"] = Category.objects.all()
         return context
 
 
@@ -165,6 +170,24 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Удаление товара"
+        return context
+
+
+class CategoryProductsView(ListView):
+    """Все опубликованные товары категории (список берётся из сервиса с кешем)."""
+
+    template_name = "catalog/category_products.html"
+    context_object_name = "products"
+
+    def get_queryset(self):
+        self.category = get_object_or_404(Category, pk=self.kwargs["pk"])
+        return get_products_by_category(self.category.pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["category"] = self.category
+        context["categories"] = Category.objects.all()
+        context["title"] = self.category.name
         return context
 
 
