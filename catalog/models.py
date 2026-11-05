@@ -2,11 +2,15 @@
 Модели приложения catalog.
 
 - Category — категория товара.
-- Product — товар, связан с категорией через ForeignKey.
+- Product — товар, связан с категорией через ForeignKey. У товара есть
+  владелец (owner) и статус публикации (is_published, по умолчанию
+  «не опубликован»). Кастомное право can_unpublish_product позволяет
+  модераторам снимать товары с публикации.
 - ContactInfo — контактные данные компании (дополнительное задание),
   заполняются через админку и выводятся на странице "Контакты".
 """
 
+from django.conf import settings
 from django.db import models
 
 
@@ -44,11 +48,23 @@ class Product(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата последнего изменения")
+    is_published = models.BooleanField(default=False, verbose_name="Опубликован")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products",
+        verbose_name="Владелец",
+    )
 
     class Meta:
         verbose_name = "Продукт"
         verbose_name_plural = "Продукты"
         ordering = ["-created_at"]
+        permissions = [
+            ("can_unpublish_product", "Может отменять публикацию продукта"),
+        ]
 
     def __str__(self):
         return self.name

@@ -11,9 +11,17 @@
 - BlogPostUpdateView: редактирование; после успешного сохранения
   пользователь перенаправляется на страницу этой статьи (success_url).
 - BlogPostDeleteView: удаление с подтверждением.
+
+Читать блог может любой посетитель, а создавать, редактировать
+и удалять статьи — только контент-менеджеры (группа «Контент-менеджер»
+с правами add/change/delete_blogpost, урок 8). Обычный пользователь или
+модератор товаров получит отказ в доступе (403), гость — переход на вход.
+Черновики (неопубликованные статьи) открываются только у тех, кто может
+редактировать блог.
 """
 
 from django.conf import settings
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.mail import send_mail
 from django.db.models import F
 from django.urls import reverse, reverse_lazy
@@ -43,6 +51,11 @@ class BlogPostDetailView(DetailView):
     model = BlogPost
     template_name = "blog/blogpost_detail.html"
     context_object_name = "post"
+
+    def get_queryset(self):
+        if self.request.user.has_perm("blog.change_blogpost"):
+            return BlogPost.objects.all()
+        return BlogPost.objects.filter(is_published=True)
 
     def get_object(self, queryset=None):
         post = super().get_object(queryset)
@@ -80,7 +93,8 @@ class BlogPostDetailView(DetailView):
         return context
 
 
-class BlogPostCreateView(CreateView):
+class BlogPostCreateView(PermissionRequiredMixin, CreateView):
+    permission_required = "blog.add_blogpost"
     model = BlogPost
     form_class = BlogPostForm
     template_name = "blog/blogpost_form.html"
@@ -94,7 +108,8 @@ class BlogPostCreateView(CreateView):
         return context
 
 
-class BlogPostUpdateView(UpdateView):
+class BlogPostUpdateView(PermissionRequiredMixin, UpdateView):
+    permission_required = "blog.change_blogpost"
     model = BlogPost
     form_class = BlogPostForm
     template_name = "blog/blogpost_form.html"
@@ -109,7 +124,8 @@ class BlogPostUpdateView(UpdateView):
         return context
 
 
-class BlogPostDeleteView(DeleteView):
+class BlogPostDeleteView(PermissionRequiredMixin, DeleteView):
+    permission_required = "blog.delete_blogpost"
     model = BlogPost
     template_name = "blog/blogpost_confirm_delete.html"
     context_object_name = "post"

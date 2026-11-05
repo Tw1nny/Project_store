@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "catalog.apps.CatalogConfig",
     "blog.apps.BlogConfig",
+    "users.apps.UsersConfig",
 ]
 
 MIDDLEWARE = [
@@ -99,7 +100,40 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# --- Почта (доп. задание урока 5: письмо при 100 просмотрах статьи) ---
+# --- Кеширование в Redis (урок 9) ---
+# Redis должен быть запущен (по умолчанию redis://127.0.0.1:6379, база 1).
+# CACHE_ENABLED=False в .env отключает кеш (подставляется DummyCache,
+# который ничего не хранит), — удобно, если Redis под рукой нет.
+CACHE_ENABLED = os.getenv("CACHE_ENABLED", "True") == "True"
+
+if CACHE_ENABLED:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1"),
+            "TIMEOUT": 60 * 15,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+
+# Время хранения в кеше (секунды)
+PRODUCT_PAGE_CACHE_TIMEOUT = 60 * 15  # страница одного товара — 15 минут
+CATEGORY_PRODUCTS_CACHE_TIMEOUT = 60 * 15  # список товаров категории — 15 минут
+
+# --- Пользователи (урок 7) ---
+# Своя модель пользователя: вход по email вместо username.
+AUTH_USER_MODEL = "users.User"
+# Куда отправлять неавторизованного пользователя и куда — после входа/выхода.
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "catalog:home"
+LOGOUT_REDIRECT_URL = "catalog:home"
+
+# --- Почта (письмо при 100 просмотрах статьи и приветствие после регистрации) ---
 # По умолчанию письма печатаются в консоль runserver. Чтобы отправлять
 # настоящие письма, задайте в .env EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 # и параметры SMTP-сервера.

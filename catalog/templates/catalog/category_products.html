@@ -1,0 +1,25 @@
+{% extends "catalog/base.html" %}
+
+{% block content %}
+  <a href="{% url 'catalog:home' %}" class="btn btn-link ps-0 mb-3">&laquo; Ко всем товарам</a>
+
+  <h1 class="mb-1">{{ category.name }}</h1>
+  {% if category.description %}
+    <p class="text-muted">{{ category.description }}</p>
+  {% endif %}
+
+  {% include "catalog/includes/category_nav.html" %}
+
+  {% if products %}
+    <p class="text-muted">Товаров в категории: {{ products|length }}</p>
+    <div class="row g-4">
+      {% for product in products %}
+        <div class="col-md-4">
+          {% include "catalog/includes/product_card.html" %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">В этой категории пока нет опубликованных товаров.</p>
+  {% endif %}
+{% endblock %}
